@@ -1,2 +1,2 @@
-# rp2040-freertos-template
-Template project for FreeRTOS on rp2040 with debugging via Openocd
+#IOT Cooling
+Project of IOT Cooling system, wchich controlling PC Fan depends on temperature reding from DS18B20 and sending data to Tuya Smart cloud
