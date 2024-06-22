@@ -1,32 +1,33 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Name project
-SET(ProjectName IotCooling)
+#Define project name
+set(ProjectName IOTCooling)
+
+# Define project 
+project(${ProjectName} C CXX)
+
+#Setting c standard
+#set(CMAKE_C_STANDARD 17)
+
+#Setting cpp standard
+#set(CMAKE_CXX_STANDARD 20)
 
 #Set pico w board
 set(PICO_BOARD pico_w)
 
 # Set any variables required for importing libraries
-SET(FREERTOS_KERNEL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/FreeRTOS-Kernel)
+set(FREERTOS_KERNEL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/lib/FreeRTOS-Kernel)
 
 # Import those libraries
 include(pico_sdk_import.cmake)
 include(${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
-# Define project
-project(${ProjectName})
-
 # Initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
-# Add subdirectories
+# Add source code directory
 add_subdirectory(src)
 
-# if you have anything in "lib" folder then uncomment below - remember to add a CMakeLists.txt
-# file to the "lib" directory
-#add_subdirectory(lib)
-
-#Enable usb output, disable uart outputs
-pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 1)
+#Add pico-onewire library 
+add_subdirectory(lib/pico-onewire)
 
