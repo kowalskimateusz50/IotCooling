@@ -13,6 +13,7 @@
 #include "ssi.h"
 
 #include "one_wire.h"
+#include "temperature.h"
 
 //Wifi credentials
 char ssid[] = "MatLan";
@@ -20,7 +21,27 @@ char pass[] = "janrouter3";
 
 const uint32_t timeout = 1000 * 60 * 10;// 10min
 
-void run_server(void *) {
+void read_temperature(void *){
+
+    One_wire one_wire(22); //GP22 - Pin 29 on Pi Pico
+    one_wire.init();
+    rom_address_t address{};
+
+    printf("\nProgram is starting reading temperature: "); 
+
+    while(1){
+
+        one_wire.single_device_read_rom(address);
+        printf("Device Address: %02x%02x%02x%02x%02x%02x%02x%02x\n", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
+        one_wire.convert_temperature(address, true, false);
+        printf("Temperature: %3.1foC\n", one_wire.temperature(address));
+        printf("Temperature: is dummy ");  
+        
+    };
+}
+
+
+void run_server(void*) {
     
     httpd_init();
     ssi_init();
@@ -33,8 +54,11 @@ void run_server(void *) {
 
 }
 
+    int gTemperature = 69;
+
 int main()
- {
+{
+
 
     //Initialize standard peripherials
     stdio_init_all();
@@ -78,22 +102,4 @@ int main()
 
     vTaskStartScheduler();
     
-    //One_wire one_wire(22); //GP22 - Pin 29 on Pi Pico
-    //one_wire.init();
-    //rom_address_t address{};
-
-    printf("\nProgram is starting reading temperature: "); 
-
-    while(1){
-
-        //one_wire.single_device_read_rom(address);
-        //printf("Device Address: %02x%02x%02x%02x%02x%02x%02x%02x\n", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
-        //one_wire.convert_temperature(address, true, false);
-        //printf("Temperature: %3.1foC\n", one_wire.temperature(address));
-        printf("Temperature: is dummy ");
-
-        
-    };
-    
-
 }
