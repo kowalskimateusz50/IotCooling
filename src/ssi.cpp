@@ -4,7 +4,7 @@
 #include "lwipopts.h"
 #include "ssi.h"
 #include "cgi.h"
-#include "temperature.h"
+#include "GlobalWebServerData.h"
 
 
 // max length of the tags defaults to be 8 chars
@@ -19,7 +19,11 @@ u16_t __time_critical_func(ssi_handler)(int iIndex, char *pcInsert, int iInsertL
     switch (iIndex) {
         case 0: /* "temp */
         {
-            printed = snprintf(pcInsert, iInsertLen, "Temperature: %d", gTemperature);
+            //Read temperature from global data and display on webserver
+            //if(xSemaphoreTake(TemperatureMutex, 0) == pdTRUE) {
+                printed = snprintf(pcInsert, iInsertLen, "Temperature: %f", gTemperature);
+                //xSemaphoreGive(TemperatureMutex);
+            //}
         }
         break;
         default: /* unknown tag */

@@ -12,34 +12,51 @@
 #include "cgi.h"
 #include "ssi.h"
 
+#include <cstdio>
+#include "pico/stdlib.h"
+#include "hardware/gpio.h"
 #include "one_wire.h"
-#include "temperature.h"
+
+#include "GlobalWebServerData.h"
+
+//Temperature data
+float gTemperature = 69;
 
 //Wifi credentials
-char ssid[] = "MatLan";
-char pass[] = "janrouter3"; 
+char ssid[] = "ASUS_Breaker";
+char pass[] = "flexlink"; 
 
 const uint32_t timeout = 1000 * 60 * 10;// 10min
 
-void read_temperature(void *){
+void read_temperature(void *) {
+
+    stdio_init_all();
+    printf("\nPeripherals initialized: "); 
 
     One_wire one_wire(22); //GP22 - Pin 29 on Pi Pico
     one_wire.init();
     rom_address_t address{};
 
+    /* Block for 500ms. */
+    const TickType_t xDelay = 1000 / configTICK_RATE_HZ;
+
     printf("\nProgram is starting reading temperature: "); 
 
-    while(1){
+    while(1) {
 
         one_wire.single_device_read_rom(address);
-        printf("Device Address: %02x%02x%02x%02x%02x%02x%02x%02x\n", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
+        //printf("Device Address: %02x%02x%02x%02x%02x%02x%02x%02x\n", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
         one_wire.convert_temperature(address, true, false);
         printf("Temperature: %3.1foC\n", one_wire.temperature(address));
-        printf("Temperature: is dummy ");  
-        
+
+        //Write a temperature to a webserver
+        //if(xSemaphoreTake(TemperatureMutex, 0) == pdTRUE) {
+            gTemperature = one_wire.temperature(address);
+           // xSemaphoreGive(TemperatureMutex);
+        //}
+       vTaskDelay(1000);
     };
 }
-
 
 void run_server(void*) {
     
@@ -54,18 +71,14 @@ void run_server(void*) {
 
 }
 
-    int gTemperature = 69;
 
-int main()
-{
-
+int main() {
 
     //Initialize standard peripherials
     stdio_init_all();
 
     //Initialize wifi chip
-    if (cyw43_arch_init())
-    {
+    if (cyw43_arch_init()) {
         printf("\ncyw43 failed to initialise");
         return 1;
     }
@@ -75,8 +88,7 @@ int main()
     cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
 
     //Attempt to connect to WiFi network 
-    if (cyw43_arch_wifi_connect_timeout_ms(ssid, pass, CYW43_AUTH_WPA2_AES_PSK, timeout))
-    {
+    if (cyw43_arch_wifi_connect_timeout_ms(ssid, pass, CYW43_AUTH_WPA2_AES_PSK, timeout)) {
         printf("\nfailed to connect, resp: ");
         return 1;
     }
@@ -90,16 +102,19 @@ int main()
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
     }
 
-
-    
-
     //Thread handling
 
     //Create web server task
     xTaskCreate(run_server, "run_server", 256, NULL, 1, NULL);
 
     //Create temperature measurement task
+    xTaskCreate(read_temperature, "read_temperature", 256, NULL, 2, NULL);
 
-    vTaskStartScheduler();
-    
+
+
+
+
+    vTaskStartScheduler();   
+
+    return 0;
 }
