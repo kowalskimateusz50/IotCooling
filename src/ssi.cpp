@@ -20,8 +20,9 @@ u16_t __time_critical_func(ssi_handler)(int iIndex, char *pcInsert, int iInsertL
         case 0: /* "temp */
         {
             //Read temperature from global data and display on webserver
+            float temperature = gTemperature;
             //if(xSemaphoreTake(TemperatureMutex, 0) == pdTRUE) {
-                printed = snprintf(pcInsert, iInsertLen, "Temperature: %f", gTemperature);
+                printed = snprintf(pcInsert, iInsertLen, "Temperature: %f", temperature);
                 //xSemaphoreGive(TemperatureMutex);
             //}
         }

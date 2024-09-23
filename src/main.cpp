@@ -23,8 +23,8 @@
 float gTemperature = 69;
 
 //Wifi credentials
-char ssid[] = "ASUS_Breaker";
-char pass[] = "flexlink"; 
+char ssid[] = "MatLan";
+char pass[] = "janrouter3"; 
 
 const uint32_t timeout = 1000 * 60 * 10;// 10min
 
@@ -37,8 +37,8 @@ void read_temperature(void *) {
     one_wire.init();
     rom_address_t address{};
 
-    /* Block for 500ms. */
-    const TickType_t xDelay = 1000 / configTICK_RATE_HZ;
+    /* Block for 1000ms. */
+    const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
 
     printf("\nProgram is starting reading temperature: "); 
 
@@ -47,14 +47,14 @@ void read_temperature(void *) {
         one_wire.single_device_read_rom(address);
         //printf("Device Address: %02x%02x%02x%02x%02x%02x%02x%02x\n", address.rom[0], address.rom[1], address.rom[2], address.rom[3], address.rom[4], address.rom[5], address.rom[6], address.rom[7]);
         one_wire.convert_temperature(address, true, false);
-        printf("Temperature: %3.1foC\n", one_wire.temperature(address));
-
         //Write a temperature to a webserver
         //if(xSemaphoreTake(TemperatureMutex, 0) == pdTRUE) {
+      
+            printf("Temperature: %3.1foC\n", one_wire.temperature(address));
             gTemperature = one_wire.temperature(address);
            // xSemaphoreGive(TemperatureMutex);
         //}
-       vTaskDelay(1000);
+       vTaskDelay(xDelay);
     };
 }
 
@@ -102,16 +102,11 @@ int main() {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
     }
 
-    //Thread handling
+    //Create temperature reading task
+    xTaskCreate(read_temperature, "read_temperature", 256, NULL, 2, NULL);
 
     //Create web server task
     xTaskCreate(run_server, "run_server", 256, NULL, 1, NULL);
-
-    //Create temperature measurement task
-    xTaskCreate(read_temperature, "read_temperature", 256, NULL, 2, NULL);
-
-
-
 
 
     vTaskStartScheduler();   
