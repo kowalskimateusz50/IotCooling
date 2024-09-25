@@ -29,9 +29,12 @@ message("Perl executing done")
 file(RENAME fsdata.c my_fsdata.c)
 
 add_executable(${ProjectName}
-    main.cpp
+    hardwaretimer.cpp
+    one_wire.cpp
     ssi.cpp
-    cgi.cpp
+    task_ReadTemperature.cpp
+    task_WebServer.cpp   
+    main.cpp
 )
 
 target_include_directories(${ProjectName} PRIVATE
@@ -42,11 +45,8 @@ target_link_libraries(${ProjectName}
     pico_cyw43_arch_lwip_threadsafe_background
     pico_lwip_http
     pico_stdlib 
-    #pico_cyw43_arch_none
     FreeRTOS-Kernel-Heap4 
-    pico_one_wire
-    hardware_adc
-    )
+)
 
 
 

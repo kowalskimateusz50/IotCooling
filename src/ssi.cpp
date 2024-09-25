@@ -1,27 +1,21 @@
-#include "hardware/adc.h"
-#include "lwip/apps/httpd.h"
-#include "pico/cyw43_arch.h"
-#include "lwipopts.h"
 #include "ssi.h"
-#include "cgi.h"
-#include "GlobalWebServerData.h"
-
 
 // max length of the tags defaults to be 8 chars
 // LWIP_HTTPD_MAX_TAG_NAME_LEN
-const char * __not_in_flash("httpd") ssi_example_tags[] = {
+const char* ssi_example_tags[] = {
     "temp"     // 0
 };
 
-u16_t __time_critical_func(ssi_handler)(int iIndex, char *pcInsert, int iInsertLen)
+u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
 {
     size_t printed;
     switch (iIndex) {
         case 0: /* "temp */
         {
             //Read temperature from global data and display on webserver
+            float temperature = gTemperature;
             //if(xSemaphoreTake(TemperatureMutex, 0) == pdTRUE) {
-                printed = snprintf(pcInsert, iInsertLen, "Temperature: %f", gTemperature);
+                printed = snprintf(pcInsert, iInsertLen, "Temperature: %f", temperature);
                 //xSemaphoreGive(TemperatureMutex);
             //}
         }
