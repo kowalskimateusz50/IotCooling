@@ -5,4 +5,4 @@
 //Temperature data to webserver display
 extern float gTemperature;
 //Mutex wchich locking this variable
-static SemaphoreHandle_t TemperatureMutex;
+//static SemaphoreHandle_t TemperatureMutex;

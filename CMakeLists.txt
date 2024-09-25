@@ -30,7 +30,4 @@ pico_sdk_init()
 # Add source code directory
 add_subdirectory(src)
 
-#Add pico-onewire library 
-add_subdirectory(lib/pico-onewire)
-
 
