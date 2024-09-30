@@ -7,4 +7,4 @@
 #include "lwip/apps/httpd.h"
 
 
-void task_WebServer(void*);
+void WebServer();

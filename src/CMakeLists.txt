@@ -32,8 +32,9 @@ add_executable(${ProjectName}
     hardwaretimer.cpp
     one_wire.cpp
     ssi.cpp
+    WebServer.cpp   
     task_ReadTemperature.cpp
-    task_WebServer.cpp   
+    task_FanControl.cpp
     main.cpp
 )
 
@@ -45,6 +46,7 @@ target_link_libraries(${ProjectName}
     pico_cyw43_arch_lwip_threadsafe_background
     pico_lwip_http
     pico_stdlib 
+    hardware_pwm
     FreeRTOS-Kernel-Heap4 
 )
 
