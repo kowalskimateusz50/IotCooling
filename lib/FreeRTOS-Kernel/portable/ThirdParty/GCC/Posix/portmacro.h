@@ -37,7 +37,6 @@
 /* *INDENT-ON* */
 
 #include <limits.h>
-#include <stdint.h>
 
 /*-----------------------------------------------------------
  * Port specific definitions.
@@ -127,7 +126,7 @@ extern void vPortCancelThread( void *pxTaskToDelete );
  */
 #define portMEMORY_BARRIER() __asm volatile( "" ::: "memory" )
 
-extern uint32_t ulPortGetRunTime( void );
+extern unsigned long ulPortGetRunTime( void );
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() /* no-op */
 #define portGET_RUN_TIME_COUNTER_VALUE()         ulPortGetRunTime()
 

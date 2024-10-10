@@ -89,11 +89,7 @@ typedef struct SemaphoreData
  * performed just because a higher priority task has been woken. */
     #define queueYIELD_IF_USING_PREEMPTION()
 #else
-    #if ( configNUMBER_OF_CORES == 1 )
-        #define queueYIELD_IF_USING_PREEMPTION()    portYIELD_WITHIN_API()
-    #else /* #if ( configNUMBER_OF_CORES == 1 ) */
-        #define queueYIELD_IF_USING_PREEMPTION()    vTaskYieldWithinAPI()
-    #endif /* #if ( configNUMBER_OF_CORES == 1 ) */
+    #define queueYIELD_IF_USING_PREEMPTION()    portYIELD_WITHIN_API()
 #endif
 
 /*
@@ -490,7 +486,7 @@ BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
             /* Check for multiplication overflow. */
             ( ( SIZE_MAX / uxQueueLength ) >= uxItemSize ) &&
             /* Check for addition overflow. */
-            ( ( UBaseType_t ) ( SIZE_MAX - sizeof( Queue_t ) ) >= ( uxQueueLength * uxItemSize ) ) )
+            ( ( SIZE_MAX - sizeof( Queue_t ) ) >= ( uxQueueLength * uxItemSize ) ) )
         {
             /* Allocate enough space to hold the maximum number of items that
              * can be in the queue at any time.  It is valid for uxItemSize to be
@@ -1074,15 +1070,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                  * is also a higher priority task in the pending ready list. */
                 if( xTaskResumeAll() == pdFALSE )
                 {
-                    #if ( configNUMBER_OF_CORES == 1 )
-                    {
-                        portYIELD_WITHIN_API();
-                    }
-                    #else /* #if ( configNUMBER_OF_CORES == 1 ) */
-                    {
-                        vTaskYieldWithinAPI();
-                    }
-                    #endif /* #if ( configNUMBER_OF_CORES == 1 ) */
+                    portYIELD_WITHIN_API();
                 }
             }
             else
@@ -1139,7 +1127,7 @@ BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue,
      * read, instead return a flag to say whether a context switch is required or
      * not (i.e. has a task with a higher priority than us been woken by this
      * post). */
-    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
     {
         if( ( pxQueue->uxMessagesWaiting < pxQueue->uxLength ) || ( xCopyPosition == queueOVERWRITE ) )
         {
@@ -1264,7 +1252,7 @@ BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue,
             xReturn = errQUEUE_FULL;
         }
     }
-    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
 
     return xReturn;
 }
@@ -1310,7 +1298,7 @@ BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
      * link: https://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
     portASSERT_IF_INTERRUPT_PRIORITY_INVALID();
 
-    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
     {
         const UBaseType_t uxMessagesWaiting = pxQueue->uxMessagesWaiting;
 
@@ -1329,7 +1317,7 @@ BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
              * can be assumed there is no mutex holder and no need to determine if
              * priority disinheritance is needed.  Simply increase the count of
              * messages (semaphores) available. */
-            pxQueue->uxMessagesWaiting = ( UBaseType_t ) ( uxMessagesWaiting + ( UBaseType_t ) 1 );
+            pxQueue->uxMessagesWaiting = uxMessagesWaiting + ( UBaseType_t ) 1;
 
             /* The event list is not altered if the queue is locked.  This will
              * be done when the queue is unlocked later. */
@@ -1430,7 +1418,7 @@ BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
             xReturn = errQUEUE_FULL;
         }
     }
-    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
 
     return xReturn;
 }
@@ -1474,7 +1462,7 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
                 /* Data available, remove one item. */
                 prvCopyDataFromQueue( pxQueue, pvBuffer );
                 traceQUEUE_RECEIVE( pxQueue );
-                pxQueue->uxMessagesWaiting = ( UBaseType_t ) ( uxMessagesWaiting - ( UBaseType_t ) 1 );
+                pxQueue->uxMessagesWaiting = uxMessagesWaiting - ( UBaseType_t ) 1;
 
                 /* There is now space in the queue, were any tasks waiting to
                  * post to the queue?  If so, unblock the highest priority waiting
@@ -1543,15 +1531,7 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
 
                 if( xTaskResumeAll() == pdFALSE )
                 {
-                    #if ( configNUMBER_OF_CORES == 1 )
-                    {
-                        portYIELD_WITHIN_API();
-                    }
-                    #else /* #if ( configNUMBER_OF_CORES == 1 ) */
-                    {
-                        vTaskYieldWithinAPI();
-                    }
-                    #endif /* #if ( configNUMBER_OF_CORES == 1 ) */
+                    portYIELD_WITHIN_API();
                 }
                 else
                 {
@@ -1631,7 +1611,7 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
 
                 /* Semaphores are queues with a data size of zero and where the
                  * messages waiting is the semaphore's count.  Reduce the count. */
-                pxQueue->uxMessagesWaiting = ( UBaseType_t ) ( uxSemaphoreCount - ( UBaseType_t ) 1 );
+                pxQueue->uxMessagesWaiting = uxSemaphoreCount - ( UBaseType_t ) 1;
 
                 #if ( configUSE_MUTEXES == 1 )
                 {
@@ -1734,15 +1714,7 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
 
                 if( xTaskResumeAll() == pdFALSE )
                 {
-                    #if ( configNUMBER_OF_CORES == 1 )
-                    {
-                        portYIELD_WITHIN_API();
-                    }
-                    #else /* #if ( configNUMBER_OF_CORES == 1 ) */
-                    {
-                        vTaskYieldWithinAPI();
-                    }
-                    #endif /* #if ( configNUMBER_OF_CORES == 1 ) */
+                    portYIELD_WITHIN_API();
                 }
                 else
                 {
@@ -1920,15 +1892,7 @@ BaseType_t xQueuePeek( QueueHandle_t xQueue,
 
                 if( xTaskResumeAll() == pdFALSE )
                 {
-                    #if ( configNUMBER_OF_CORES == 1 )
-                    {
-                        portYIELD_WITHIN_API();
-                    }
-                    #else /* #if ( configNUMBER_OF_CORES == 1 ) */
-                    {
-                        vTaskYieldWithinAPI();
-                    }
-                    #endif /* #if ( configNUMBER_OF_CORES == 1 ) */
+                    portYIELD_WITHIN_API();
                 }
                 else
                 {
@@ -1991,7 +1955,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
      * link: https://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
     portASSERT_IF_INTERRUPT_PRIORITY_INVALID();
 
-    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
     {
         const UBaseType_t uxMessagesWaiting = pxQueue->uxMessagesWaiting;
 
@@ -2003,7 +1967,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
             traceQUEUE_RECEIVE_FROM_ISR( pxQueue );
 
             prvCopyDataFromQueue( pxQueue, pvBuffer );
-            pxQueue->uxMessagesWaiting = ( UBaseType_t ) ( uxMessagesWaiting - ( UBaseType_t ) 1 );
+            pxQueue->uxMessagesWaiting = uxMessagesWaiting - ( UBaseType_t ) 1;
 
             /* If the queue is locked the event list will not be modified.
              * Instead update the lock count so the task that unlocks the queue
@@ -2051,7 +2015,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
             traceQUEUE_RECEIVE_FROM_ISR_FAILED( pxQueue );
         }
     }
-    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
 
     return xReturn;
 }
@@ -2085,7 +2049,7 @@ BaseType_t xQueuePeekFromISR( QueueHandle_t xQueue,
      * link: https://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
     portASSERT_IF_INTERRUPT_PRIORITY_INVALID();
 
-    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
     {
         /* Cannot block in an ISR, so check there is data available. */
         if( pxQueue->uxMessagesWaiting > ( UBaseType_t ) 0 )
@@ -2106,7 +2070,7 @@ BaseType_t xQueuePeekFromISR( QueueHandle_t xQueue,
             traceQUEUE_PEEK_FROM_ISR_FAILED( pxQueue );
         }
     }
-    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
 
     return xReturn;
 }
@@ -2137,7 +2101,7 @@ UBaseType_t uxQueueSpacesAvailable( const QueueHandle_t xQueue )
 
     taskENTER_CRITICAL();
     {
-        uxReturn = ( UBaseType_t ) ( pxQueue->uxLength - pxQueue->uxMessagesWaiting );
+        uxReturn = pxQueue->uxLength - pxQueue->uxMessagesWaiting;
     }
     taskEXIT_CRITICAL();
 
@@ -2230,18 +2194,6 @@ void vQueueDelete( QueueHandle_t xQueue )
 #endif /* configUSE_TRACE_FACILITY */
 /*-----------------------------------------------------------*/
 
-UBaseType_t uxQueueGetQueueItemSize( QueueHandle_t xQueue ) /* PRIVILEGED_FUNCTION */
-{
-    return ( ( Queue_t * ) xQueue )->uxItemSize;
-}
-/*-----------------------------------------------------------*/
-
-UBaseType_t uxQueueGetQueueLength( QueueHandle_t xQueue ) /* PRIVILEGED_FUNCTION */
-{
-    return ( ( Queue_t * ) xQueue )->uxLength;
-}
-/*-----------------------------------------------------------*/
-
 #if ( configUSE_MUTEXES == 1 )
 
     static UBaseType_t prvGetDisinheritPriorityAfterTimeout( const Queue_t * const pxQueue )
@@ -2256,7 +2208,7 @@ UBaseType_t uxQueueGetQueueLength( QueueHandle_t xQueue ) /* PRIVILEGED_FUNCTION
          * mutex. */
         if( listCURRENT_LIST_LENGTH( &( pxQueue->xTasksWaitingToReceive ) ) > 0U )
         {
-            uxHighestPriorityOfWaitingTasks = ( UBaseType_t ) ( ( UBaseType_t ) configMAX_PRIORITIES - ( UBaseType_t ) listGET_ITEM_VALUE_OF_HEAD_ENTRY( &( pxQueue->xTasksWaitingToReceive ) ) );
+            uxHighestPriorityOfWaitingTasks = ( UBaseType_t ) configMAX_PRIORITIES - ( UBaseType_t ) listGET_ITEM_VALUE_OF_HEAD_ENTRY( &( pxQueue->xTasksWaitingToReceive ) );
         }
         else
         {
@@ -2346,7 +2298,7 @@ static BaseType_t prvCopyDataToQueue( Queue_t * const pxQueue,
         }
     }
 
-    pxQueue->uxMessagesWaiting = ( UBaseType_t ) ( uxMessagesWaiting + ( UBaseType_t ) 1 );
+    pxQueue->uxMessagesWaiting = uxMessagesWaiting + ( UBaseType_t ) 1;
 
     return xReturn;
 }

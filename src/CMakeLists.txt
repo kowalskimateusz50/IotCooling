@@ -29,7 +29,6 @@ message("Perl executing done")
 file(RENAME fsdata.c my_fsdata.c)
 
 add_executable(${ProjectName}
-    hardwaretimer.cpp
     one_wire.cpp
     ssi.cpp
     WebServer.cpp   
@@ -42,12 +41,12 @@ target_include_directories(${ProjectName} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
-target_link_libraries(${ProjectName} 
-    pico_cyw43_arch_lwip_threadsafe_background
-    pico_lwip_http
-    pico_stdlib 
-    hardware_pwm
-    FreeRTOS-Kernel-Heap4 
+target_link_libraries(${ProjectName}
+pico_cyw43_arch_lwip_threadsafe_background
+pico_lwip_http
+pico_stdlib 
+FreeRTOS-Kernel-Heap4 
+hardware_pwm
 )
 
 

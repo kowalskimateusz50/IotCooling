@@ -48,7 +48,7 @@
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 /*-----------------------------------------------------------*/
 
-#if ( ( portUSING_MPU_WRAPPERS == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 1 ) )
+#if ( portUSING_MPU_WRAPPERS == 1 )
 
     #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
         BaseType_t MPU_xTaskCreate( TaskFunction_t pvTaskCode,
@@ -474,6 +474,30 @@
         }
 
         return uxReturn;
+    }
+/*-----------------------------------------------------------*/
+
+    char * MPU_pcTaskGetName( TaskHandle_t xTaskToQuery ) /* FREERTOS_SYSTEM_CALL */
+    {
+        char * pcReturn;
+
+        if( portIS_PRIVILEGED() == pdFALSE )
+        {
+            portRAISE_PRIVILEGE();
+            portMEMORY_BARRIER();
+
+            pcReturn = pcTaskGetName( xTaskToQuery );
+            portMEMORY_BARRIER();
+
+            portRESET_PRIVILEGE();
+            portMEMORY_BARRIER();
+        }
+        else
+        {
+            pcReturn = pcTaskGetName( xTaskToQuery );
+        }
+
+        return pcReturn;
     }
 /*-----------------------------------------------------------*/
 
@@ -1919,11 +1943,11 @@
 /*-----------------------------------------------------------*/
 
     #if ( configUSE_TIMERS == 1 )
-        BaseType_t MPU_xTimerGenericCommandFromTask( TimerHandle_t xTimer,
-                                                     const BaseType_t xCommandID,
-                                                     const TickType_t xOptionalValue,
-                                                     BaseType_t * const pxHigherPriorityTaskWoken,
-                                                     const TickType_t xTicksToWait ) /* FREERTOS_SYSTEM_CALL */
+        BaseType_t MPU_xTimerGenericCommand( TimerHandle_t xTimer,
+                                             const BaseType_t xCommandID,
+                                             const TickType_t xOptionalValue,
+                                             BaseType_t * const pxHigherPriorityTaskWoken,
+                                             const TickType_t xTicksToWait ) /* FREERTOS_SYSTEM_CALL */
         {
             BaseType_t xReturn;
 
@@ -1932,7 +1956,7 @@
                 portRAISE_PRIVILEGE();
                 portMEMORY_BARRIER();
 
-                xReturn = xTimerGenericCommandFromTask( xTimer, xCommandID, xOptionalValue, pxHigherPriorityTaskWoken, xTicksToWait );
+                xReturn = xTimerGenericCommand( xTimer, xCommandID, xOptionalValue, pxHigherPriorityTaskWoken, xTicksToWait );
                 portMEMORY_BARRIER();
 
                 portRESET_PRIVILEGE();
@@ -1940,7 +1964,7 @@
             }
             else
             {
-                xReturn = xTimerGenericCommandFromTask( xTimer, xCommandID, xOptionalValue, pxHigherPriorityTaskWoken, xTicksToWait );
+                xReturn = xTimerGenericCommand( xTimer, xCommandID, xOptionalValue, pxHigherPriorityTaskWoken, xTicksToWait );
             }
 
             return xReturn;
@@ -2513,5 +2537,5 @@
     #endif
 /*-----------------------------------------------------------*/
 
-#endif /* #if ( ( portUSING_MPU_WRAPPERS == 1 ) && ( configUSE_MPU_WRAPPERS_V1 == 1 ) ) */
+#endif /* portUSING_MPU_WRAPPERS == 1 */
 /*-----------------------------------------------------------*/

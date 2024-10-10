@@ -100,10 +100,10 @@ static pthread_once_t hSigSetupThread = PTHREAD_ONCE_INIT;
 static sigset_t xAllSignals;
 static sigset_t xSchedulerOriginalSignalMask;
 static pthread_t hMainThread = ( pthread_t ) NULL;
-static volatile BaseType_t uxCriticalNesting;
+static volatile portBASE_TYPE uxCriticalNesting;
 /*-----------------------------------------------------------*/
 
-static BaseType_t xSchedulerEnd = pdFALSE;
+static portBASE_TYPE xSchedulerEnd = pdFALSE;
 /*-----------------------------------------------------------*/
 
 static void prvSetupSignalsAndSchedulerPolicy( void );
@@ -131,10 +131,10 @@ void prvFatalError( const char * pcCall,
 /*
  * See header file for description.
  */
-StackType_t * pxPortInitialiseStack( StackType_t * pxTopOfStack,
-                                     StackType_t * pxEndOfStack,
-                                     TaskFunction_t pxCode,
-                                     void * pvParameters )
+portSTACK_TYPE * pxPortInitialiseStack( StackType_t * pxTopOfStack,
+                                        StackType_t * pxEndOfStack,
+                                        TaskFunction_t pxCode,
+                                        void * pvParameters )
 {
     Thread_t * thread;
     pthread_attr_t xThreadAttributes;
@@ -147,7 +147,7 @@ StackType_t * pxPortInitialiseStack( StackType_t * pxTopOfStack,
      * Store the additional thread data at the start of the stack.
      */
     thread = ( Thread_t * ) ( pxTopOfStack + 1 ) - 1;
-    pxTopOfStack = ( StackType_t * ) thread - 1;
+    pxTopOfStack = ( portSTACK_TYPE * ) thread - 1;
     ulStackSize = ( size_t )( pxTopOfStack + 1 - pxEndOfStack ) * sizeof( *pxTopOfStack );
 
     #ifdef __APPLE__
@@ -197,7 +197,7 @@ void vPortStartFirstTask( void )
 /*
  * See header file for description.
  */
-BaseType_t xPortStartScheduler( void )
+portBASE_TYPE xPortStartScheduler( void )
 {
     int iSignal;
     sigset_t xSignals;
@@ -584,12 +584,12 @@ static void prvSetupSignalsAndSchedulerPolicy( void )
 }
 /*-----------------------------------------------------------*/
 
-uint32_t ulPortGetRunTime( void )
+unsigned long ulPortGetRunTime( void )
 {
     struct tms xTimes;
 
     times( &xTimes );
 
-    return ( uint32_t ) xTimes.tms_utime;
+    return ( unsigned long ) xTimes.tms_utime;
 }
 /*-----------------------------------------------------------*/

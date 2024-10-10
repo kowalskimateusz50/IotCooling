@@ -87,8 +87,7 @@ KERNEL_IGNORED_PATTERNS = [
     r'.*\.git.*',
     r'.*portable/IAR/AtmelSAM7S64/.*AT91SAM7.*',
     r'.*portable/GCC/ARM7_AT91SAM7S/.*',
-    r'.*portable/MPLAB/PIC18F/stdio.h',
-    r'.*portable/ThirdParty/xClang/XCOREAI/*'
+    r'.*portable/MPLAB/PIC18F/stdio.h'
 ]
 
 KERNEL_THIRD_PARTY_PATTERNS = [

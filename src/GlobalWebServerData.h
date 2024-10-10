@@ -4,5 +4,6 @@
 
 //Temperature data to webserver display
 extern float gTemperature;
+extern uint RotationCounter;
 //Mutex wchich locking this variable
 //static SemaphoreHandle_t TemperatureMutex;

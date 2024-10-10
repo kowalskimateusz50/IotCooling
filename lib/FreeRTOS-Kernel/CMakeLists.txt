@@ -225,11 +225,8 @@ elseif((FREERTOS_PORT STREQUAL "A_CUSTOM_PORT") AND (NOT TARGET freertos_kernel_
     "      .)\n"
     "   target_link_libraries(freertos_kernel_port\n"
     "     PRIVATE\n"
-    "       freertos_kernel_include)")
+    "       freertos_kernel)")
 endif()
-
-
-add_library(freertos_kernel STATIC)
 
 ########################################################################
 # Overall Compile Options
@@ -251,7 +248,7 @@ add_library(freertos_kernel STATIC)
 #   MSVC        | MSVC # Note only for MinGW?
 #   Renesas     | ?TBD?
 
-target_compile_options(freertos_kernel PRIVATE
+add_compile_options(
     ### Gnu/Clang C Options
     $<$<COMPILE_LANG_AND_ID:C,GNU>:-fdiagnostics-color=always>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-fcolor-diagnostics>
@@ -260,23 +257,16 @@ target_compile_options(freertos_kernel PRIVATE
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wextra>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wpedantic>
     $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Werror>
-    $<$<COMPILE_LANG_AND_ID:C,Clang,GNU>:-Wconversion>
     $<$<COMPILE_LANG_AND_ID:C,Clang>:-Weverything>
 
-    # Suppressions required to build clean with clang.
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-unused-macros>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-padded>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-missing-variable-declarations>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-covered-switch-default>
-    $<$<COMPILE_LANG_AND_ID:C,Clang>:-Wno-cast-align>
+    # TODO: Add in other Compilers here.
 )
 
 
 ########################################################################
-add_subdirectory(include)
 add_subdirectory(portable)
 
-target_sources(freertos_kernel PRIVATE
+add_library(freertos_kernel STATIC
     croutine.c
     event_groups.c
     list.c
@@ -289,11 +279,17 @@ target_sources(freertos_kernel PRIVATE
     $<IF:$<BOOL:$<FILTER:${FREERTOS_HEAP},EXCLUDE,^[1-5]$>>,${FREERTOS_HEAP},portable/MemMang/heap_${FREERTOS_HEAP}.c>
 )
 
+target_include_directories(freertos_kernel
+    PUBLIC
+        include
+        # Note: DEPRECATED but still supported, may be removed in a future release.
+        $<$<NOT:$<TARGET_EXISTS:freertos_config>>:${FREERTOS_CONFIG_FILE_DIRECTORY}>
+)
 
 target_link_libraries(freertos_kernel
     PUBLIC
+        $<$<TARGET_EXISTS:freertos_config>:freertos_config>
         freertos_kernel_port
-        freertos_kernel_include
 )
 
 ########################################################################

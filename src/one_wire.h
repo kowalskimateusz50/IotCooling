@@ -15,9 +15,9 @@
 #include "hardware/irq.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "hardwaretimer.h"
 
 
+#define TIMER_NUM 0
 #define FAMILY_CODE address.rom[0]
 #define FAMILY_CODE_DS18S20 0x10 //9bit temp
 #define FAMILY_CODE_DS18B20 0x28 //9-12bit temp also known as MAX31820
@@ -37,6 +37,12 @@ static const int ReadROMCommand = 0x33;
 static const int SearchROMCommand = 0xF0;
 static const int SkipROMCommand = 0xCC;
 static const int WriteScratchPadCommand = 0x4E;
+
+
+void timer_us_initialize(uint32_t delay_us);
+
+bool timer_us_elapsed();
+
 
 
 struct rom_address_t {

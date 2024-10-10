@@ -11,6 +11,7 @@
 //FreeRTOS libraries
 #include "FreeRTOS.h"
 #include "task.h"
+#include "GlobalWebServerData.h"
 
 //FreeRTOS tasks headers
 #include "task_ReadTemperature.h"
@@ -24,6 +25,9 @@ char ssid[] = "MatLan";
 char pass[] = "janrouter3"; 
 
 const uint32_t timeout = 1000 * 60 * 10;// 10min
+
+
+
 
 int main() {
 

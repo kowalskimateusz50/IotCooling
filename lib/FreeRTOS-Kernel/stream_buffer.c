@@ -27,6 +27,7 @@
  */
 
 /* Standard includes. */
+#include <stdint.h>
 #include <string.h>
 
 /* Defining MPU_WRAPPERS_INCLUDED_FROM_API_FILE prevents task.h from redefining
@@ -77,7 +78,7 @@
  */
 #if ( configUSE_SB_COMPLETED_CALLBACK == 1 )
     #define prvRECEIVE_COMPLETED( pxStreamBuffer )                                               \
-    do {                                                                                         \
+    {                                                                                            \
         if( ( pxStreamBuffer )->pxReceiveCompletedCallback != NULL )                             \
         {                                                                                        \
             ( pxStreamBuffer )->pxReceiveCompletedCallback( ( pxStreamBuffer ), pdFALSE, NULL ); \
@@ -86,7 +87,7 @@
         {                                                                                        \
             sbRECEIVE_COMPLETED( ( pxStreamBuffer ) );                                           \
         }                                                                                        \
-    } while( 0 )
+    }
 #else /* if ( configUSE_SB_COMPLETED_CALLBACK == 1 ) */
     #define prvRECEIVE_COMPLETED( pxStreamBuffer )    sbRECEIVE_COMPLETED( ( pxStreamBuffer ) )
 #endif /* if ( configUSE_SB_COMPLETED_CALLBACK == 1 ) */
@@ -97,7 +98,7 @@
     do {                                                                             \
         UBaseType_t uxSavedInterruptStatus;                                          \
                                                                                      \
-        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();                      \
+        uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();                  \
         {                                                                            \
             if( ( pxStreamBuffer )->xTaskWaitingToSend != NULL )                     \
             {                                                                        \
@@ -108,14 +109,14 @@
                 ( pxStreamBuffer )->xTaskWaitingToSend = NULL;                       \
             }                                                                        \
         }                                                                            \
-        taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );                        \
+        portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );                 \
     } while( 0 )
 #endif /* sbRECEIVE_COMPLETED_FROM_ISR */
 
 #if ( configUSE_SB_COMPLETED_CALLBACK == 1 )
     #define prvRECEIVE_COMPLETED_FROM_ISR( pxStreamBuffer,                                                               \
                                            pxHigherPriorityTaskWoken )                                                   \
-    do {                                                                                                                 \
+    {                                                                                                                    \
         if( ( pxStreamBuffer )->pxReceiveCompletedCallback != NULL )                                                     \
         {                                                                                                                \
             ( pxStreamBuffer )->pxReceiveCompletedCallback( ( pxStreamBuffer ), pdTRUE, ( pxHigherPriorityTaskWoken ) ); \
@@ -124,7 +125,7 @@
         {                                                                                                                \
             sbRECEIVE_COMPLETED_FROM_ISR( ( pxStreamBuffer ), ( pxHigherPriorityTaskWoken ) );                           \
         }                                                                                                                \
-    } while( 0 )
+    }
 #else /* if ( configUSE_SB_COMPLETED_CALLBACK == 1 ) */
     #define prvRECEIVE_COMPLETED_FROM_ISR( pxStreamBuffer, pxHigherPriorityTaskWoken ) \
     sbRECEIVE_COMPLETED_FROM_ISR( ( pxStreamBuffer ), ( pxHigherPriorityTaskWoken ) )
@@ -174,7 +175,7 @@
     do {                                                                                \
         UBaseType_t uxSavedInterruptStatus;                                             \
                                                                                         \
-        uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();                         \
+        uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();                     \
         {                                                                               \
             if( ( pxStreamBuffer )->xTaskWaitingToReceive != NULL )                     \
             {                                                                           \
@@ -185,7 +186,7 @@
                 ( pxStreamBuffer )->xTaskWaitingToReceive = NULL;                       \
             }                                                                           \
         }                                                                               \
-        taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );                           \
+        portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );                    \
     } while( 0 )
 #endif /* sbSEND_COMPLETE_FROM_ISR */
 
@@ -435,13 +436,11 @@ static void prvInitialiseNewStreamBuffer( StreamBuffer_t * const pxStreamBuffer,
         configASSERT( xBufferSizeBytes > sbBYTES_TO_STORE_MESSAGE_LENGTH );
 
         #if ( configASSERT_DEFINED == 1 )
-        {
+
             /* Sanity check that the size of the structure used to declare a
              * variable of type StaticStreamBuffer_t equals the size of the real
              * message buffer structure. */
-            volatile size_t xSize = sizeof( StaticStreamBuffer_t );
-            configASSERT( xSize == sizeof( StreamBuffer_t ) );
-        } /*lint !e529 xSize is referenced is configASSERT() is defined. */
+            configASSERT( sizeof( StaticStreamBuffer_t ) == sizeof( StreamBuffer_t ) );
         #endif /* configASSERT_DEFINED */
 
         if( ( pucStreamBufferStorageArea != NULL ) && ( pxStaticStreamBuffer != NULL ) )
@@ -1219,7 +1218,7 @@ BaseType_t xStreamBufferSendCompletedFromISR( StreamBufferHandle_t xStreamBuffer
 
     configASSERT( pxStreamBuffer );
 
-    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
     {
         if( ( pxStreamBuffer )->xTaskWaitingToReceive != NULL )
         {
@@ -1235,7 +1234,7 @@ BaseType_t xStreamBufferSendCompletedFromISR( StreamBufferHandle_t xStreamBuffer
             xReturn = pdFALSE;
         }
     }
-    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
 
     return xReturn;
 }
@@ -1250,7 +1249,7 @@ BaseType_t xStreamBufferReceiveCompletedFromISR( StreamBufferHandle_t xStreamBuf
 
     configASSERT( pxStreamBuffer );
 
-    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
+    uxSavedInterruptStatus = portSET_INTERRUPT_MASK_FROM_ISR();
     {
         if( ( pxStreamBuffer )->xTaskWaitingToSend != NULL )
         {
@@ -1266,7 +1265,7 @@ BaseType_t xStreamBufferReceiveCompletedFromISR( StreamBufferHandle_t xStreamBuf
             xReturn = pdFALSE;
         }
     }
-    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
+    portCLEAR_INTERRUPT_MASK_FROM_ISR( uxSavedInterruptStatus );
 
     return xReturn;
 }
@@ -1447,7 +1446,7 @@ static void prvInitialiseNewStreamBuffer( StreamBuffer_t * const pxStreamBuffer,
 
     uint8_t ucStreamBufferGetStreamBufferType( StreamBufferHandle_t xStreamBuffer )
     {
-        return( ( uint8_t ) ( xStreamBuffer->ucFlags & sbFLAGS_IS_MESSAGE_BUFFER ) );
+        return( xStreamBuffer->ucFlags & sbFLAGS_IS_MESSAGE_BUFFER );
     }
 
 #endif /* configUSE_TRACE_FACILITY */

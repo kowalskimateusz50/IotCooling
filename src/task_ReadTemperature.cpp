@@ -26,7 +26,7 @@ void task_ReadTemperature(void *) {
         printf("Temperature: %3.1foC\n", FilteredTemperature);
         gTemperature = FilteredTemperature;
 
-       vTaskDelay(1000);
+       vTaskDelay(xDelay);
     };
 }
 
