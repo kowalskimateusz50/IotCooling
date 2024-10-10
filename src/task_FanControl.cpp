@@ -4,6 +4,7 @@
 
 uint SecondCounter = 0;
 uint PulseCounter = 0;
+uint gFanSpeedRpm = 0;
 
 static void hardware_gpio_timer_handler(void) {
     // Clear the alarm irq
@@ -49,15 +50,16 @@ void task_FanControl(void *){
    uint slice = pwm_gpio_to_slice_num(FAN_PIN_OUT);
    uint channel = pwm_gpio_to_channel(FAN_PIN_OUT);
 
-   pwm_set_wrap(slice, WRAP_BASE); // 1.9kHz * (X)/WRAP_BASE  
+   pwm_set_wrap(slice, WRAP_BASE); 
 
    //Calculate fan speed in %
-   uint FanSpeedPercent = (FAN_SPEED* (WRAP_BASE/ 100));
+   uint FanSpeedPercent  = 60;
+   uint RequestedFanSpeed = 0;
 
 
-   pwm_set_chan_level(slice, channel, FanSpeedPercent); // 50%
+   pwm_set_chan_level(slice, channel, FanSpeedPercent); 
 
-   pwm_set_enabled(slice, true); // Aktywuj PWM
+   pwm_set_enabled(slice, true); // Activate PWM
 
    printf("\nFan is running with speed: %d %", FAN_SPEED);
 
@@ -73,11 +75,24 @@ void task_FanControl(void *){
     while(true){
 
         if(SecondCounter >= 200) {
-            printf("\nCounted revolutions in rpm: %d", PulseCounter*30);
+            #ifdef debug
+                //Display value on webserver 
+                printf("\nCounted revolutions in rpm: %d", PulseCounter*30);
+            #endif
+
+            gFanSpeedRpm= PulseCounter*30;
+
             //Reset pulse counter
             PulseCounter=0;
             //Reset second counter
             SecondCounter=0;
+        }
+
+        //Control FAN PWM
+        if (xQueueReceive(QRequestedFanSpeed,&RequestedFanSpeed, 0U) == pdPASS) {
+            FanSpeedPercent = (RequestedFanSpeed * (WRAP_BASE/ 100));
+            pwm_set_chan_level(slice, channel, FanSpeedPercent); 
+            printf("\nNew requested fan speed:  %d", RequestedFanSpeed);
         }
     }
 

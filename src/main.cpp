@@ -20,13 +20,16 @@
 //Webserver interface initialization
 #include "WebServer.h"
 
+//Tasks shared resources
+#include "taskshared.h"
+
 //Wifi credentials
 char ssid[] = "MatLan";
 char pass[] = "janrouter3"; 
 
 const uint32_t timeout = 1000 * 60 * 10;// 10min
 
-
+QueueHandle_t QRequestedFanSpeed = xQueueCreate(1, sizeof(uint));
 
 
 int main() {
@@ -60,6 +63,10 @@ int main() {
         WebServer();
         sleep_ms(100);
     }
+
+    //Shared values between 
+    uint* RequestedFanSpeed; //Requested fan speed in %
+
 
     //Create temperature reading task
     xTaskCreate(task_ReadTemperature, "read_temperature", 1024, NULL, 2, NULL);

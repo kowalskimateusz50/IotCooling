@@ -3,7 +3,8 @@
 // max length of the tags defaults to be 8 chars
 // LWIP_HTTPD_MAX_TAG_NAME_LEN
 const char* ssi_example_tags[] = {
-    "temp"     // 0
+    "temp",     // 0
+    "fanspd"    // 1
 };
 
 u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
@@ -14,12 +15,16 @@ u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen)
         {
             //Read temperature from global data and display on webserver
             float temperature = gTemperature;
-            //if(xSemaphoreTake(TemperatureMutex, 0) == pdTRUE) {
-                printed = snprintf(pcInsert, iInsertLen, "Temperature: %f", temperature);
-                //xSemaphoreGive(TemperatureMutex);
-            //}
+            printed = snprintf(pcInsert, iInsertLen, "Temperature: %.2f", temperature);
         }
         break;
+        case 1: /* "fanspd*/
+        {
+            //Read fan rotation speed and display on webserver
+            uint FanSpeedRpm = gFanSpeedRpm;
+            printed = snprintf(pcInsert, iInsertLen, "Fan speed: %d rpm", FanSpeedRpm);
+        }
+        break;        
         default: /* unknown tag */
             printed = 0;
             break;

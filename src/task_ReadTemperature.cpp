@@ -1,7 +1,7 @@
 #include "task_ReadTemperature.h"
 
-//Temperature data
-float gTemperature = 69;
+//Declare global value
+float gTemperature = 0;
 
 void task_ReadTemperature(void *) {
 
@@ -13,18 +13,36 @@ void task_ReadTemperature(void *) {
     rom_address_t address{};
 
     /* Block for 1000ms. */
-    const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
+    const TickType_t xDelay = 3000 / portTICK_PERIOD_MS;
 
-    printf("\nProgram is starting reading temperature: "); 
+    #ifdef debug
+        //Display value on webserver 
+        printf("\nProgram is starting reading temperature: ");
+    #endif 
+    //Temperature data
     float FilteredTemperature = 0;
+    uint FanSpeedValue = 60;
 
     while(1) {
         one_wire.single_device_read_rom(address);
         one_wire.convert_temperature(address, true, false);
         ReadingsFiltration(&FilteredTemperature, one_wire.temperature(address));
-
-        printf("Temperature: %3.1foC\n", FilteredTemperature);
+        #ifdef debug
+            //Display value on webserver 
+            printf("Temperature: %3.1foC\n", FilteredTemperature);
+        #endif
         gTemperature = FilteredTemperature;
+
+        //Control fan speed 
+
+        if (FanSpeedValue >= 60 && FanSpeedValue < 100) {
+            FanSpeedValue += 10;
+        }           
+        else if (FanSpeedValue == 100) {
+            FanSpeedValue = 60;
+        }
+
+        xQueueSend(QRequestedFanSpeed,&FanSpeedValue, 0U);
 
        vTaskDelay(xDelay);
     };
