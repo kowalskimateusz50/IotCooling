@@ -98,13 +98,7 @@ void task_FanControl(void *){
 
 }
 
-void CountPulsesInSec(){
-    printf("\nFan speed monitoring 1 second elapsed: ");
-}
 
-void SpeedConntrol() {
-    
-}
 
 bool EdgeDetection(bool iGPIO, int iEdgeConfig) {
 

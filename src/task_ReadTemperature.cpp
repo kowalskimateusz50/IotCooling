@@ -13,7 +13,7 @@ void task_ReadTemperature(void *) {
     rom_address_t address{};
 
     /* Block for 1000ms. */
-    const TickType_t xDelay = 3000 / portTICK_PERIOD_MS;
+    const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
 
     #ifdef debug
         //Display value on webserver 
@@ -21,28 +21,26 @@ void task_ReadTemperature(void *) {
     #endif 
     //Temperature data
     float FilteredTemperature = 0;
-    uint FanSpeedValue = 60;
+    uint FanSpeedValue = 0;
 
     while(1) {
         one_wire.single_device_read_rom(address);
         one_wire.convert_temperature(address, true, false);
         ReadingsFiltration(&FilteredTemperature, one_wire.temperature(address));
+
         #ifdef debug
             //Display value on webserver 
-            printf("Temperature: %3.1foC\n", FilteredTemperature);
+            //printf("Temperature: %3.1foC\n", FilteredTemperature);
         #endif
+
+        //Send temperature reading to WebServer
         gTemperature = FilteredTemperature;
 
         //Control fan speed 
-
-        if (FanSpeedValue >= 60 && FanSpeedValue < 100) {
-            FanSpeedValue += 10;
-        }           
-        else if (FanSpeedValue == 100) {
-            FanSpeedValue = 60;
-        }
-
+        FanSpeedValue = CalculateRequestedFanSpeed(FilteredTemperature);
         xQueueSend(QRequestedFanSpeed,&FanSpeedValue, 0U);
+
+
 
        vTaskDelay(xDelay);
     };
@@ -54,4 +52,21 @@ void ReadingsFiltration(float* FilteredRead, float RawRead) {
         *FilteredRead = RawRead;
     }
 
+}
+
+uint CalculateRequestedFanSpeed(float Temperature) {
+    //Temperature lower than treshold
+    if (Temperature < TEMPERATURE_LOW_RANGE) {
+        return 0;
+    }
+    else if (Temperature >= TEMPERATURE_LOW_RANGE && Temperature <= TEMPERATURE_HIGH_RANGE) {
+        uint RetVal = (60 + ((40/(TEMPERATURE_HIGH_RANGE - TEMPERATURE_LOW_RANGE))* (Temperature - TEMPERATURE_LOW_RANGE)));
+        printf("\nFan requested speed %d %:", RetVal);
+        return RetVal;
+    }
+    else if (Temperature > TEMPERATURE_HIGH_RANGE) {
+        return 100;
+    }
+
+    return 0;
 }

@@ -63,11 +63,7 @@ int main() {
         WebServer();
         sleep_ms(100);
     }
-
-    //Shared values between 
-    uint* RequestedFanSpeed; //Requested fan speed in %
-
-
+    
     //Create temperature reading task
     xTaskCreate(task_ReadTemperature, "read_temperature", 1024, NULL, 2, NULL);
 

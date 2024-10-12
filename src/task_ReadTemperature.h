@@ -6,5 +6,5 @@
 #include "taskshared.h"
 
 void task_ReadTemperature(void *);
-
 void ReadingsFiltration(float* FilteredRead, float RawRead); 
+uint CalculateRequestedFanSpeed(float Temperature);

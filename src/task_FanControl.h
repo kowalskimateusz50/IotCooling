@@ -23,6 +23,5 @@
 
 void task_FanControl(void *);
 bool EdgeDetection(bool iGPIO, int iEdgeConfig);
-void SpeedConntrol();
 static void hardware_gpio_timer_handler(void);
 void timer_gpio_initialize(uint32_t delay_us);
