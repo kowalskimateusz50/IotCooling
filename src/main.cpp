@@ -23,14 +23,10 @@
 //Tasks shared resources
 #include "taskshared.h"
 
-//Wifi credentials
-char ssid[] = "MatLan";
-char pass[] = "janrouter3"; 
+#include "settings.h"
 
-const uint32_t timeout = 1000 * 60 * 10;// 10min
-
+//Tasks shared resources queue
 QueueHandle_t QRequestedFanSpeed = xQueueCreate(1, sizeof(uint));
-
 
 int main() {
 
@@ -42,12 +38,12 @@ int main() {
         printf("\ncyw43 failed to initialise");
         return 1;
     }
-
+S
     cyw43_arch_enable_sta_mode();
     cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
 
     //Attempt to connect to WiFi network 
-    if (cyw43_arch_wifi_connect_timeout_ms(ssid, pass, CYW43_AUTH_WPA2_AES_PSK, timeout)) {
+    if (cyw43_arch_wifi_connect_timeout_ms(SSID ,PASSWORD , CYW43_AUTH_WPA2_AES_PSK, WIFI_CON_TIMEOUT)) {
         printf("\nfailed to connect, resp: ");
         return 1;
     }

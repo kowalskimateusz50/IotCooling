@@ -24,8 +24,6 @@ set(CMAKE_CXX_STANDARD 17)
 #Set pico w board
 set(PICO_BOARD pico_w)
 
-set(PICO_MAX_SHARED_IRQ_HANDLERS 5)
-
 # Initialize the Raspberry Pi Pico SDK
 pico_sdk_init()
 
